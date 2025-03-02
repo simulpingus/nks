@@ -30,6 +30,7 @@ local function clearNet()
 		v.partatt:Destroy()
 		v.bppart:Destroy()
 		v.align:Destroy()
+		v.torque:Destroy()
 		
 		v.part.CanCollide = v.collision
 	end
@@ -62,17 +63,22 @@ local function addNet()
 		alignp.Attachment1 = bpatt
 		alignp.MaxForce = math.huge
 		alignp.MaxVelocity = math.huge
-		alignp.Responsiveness = math.huge
+		alignp.Responsiveness = 200
 		alignp.ReactionForceEnabled = false
 		alignp.ApplyAtCenterOfMass = true
 		alignp.Parent = v
+		
+		local tq = Instance.new("Torque")
+		tq.Torque = Vector3.new(1e5, 1e5, 1e5)
+		tq.Parent = v
 
 		table.insert(net, {
 			part = v,
 			partatt = patt,
 			bppart = bp,
 			align = alignp,
-			collision = v.CanCollide,
+			torque = tq,
+			collision = v.CanCollide
 		})
 		
 		v.CanCollide = false
