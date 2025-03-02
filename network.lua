@@ -7,7 +7,7 @@ local range = 0
 local count = 0
 local speed = 0
 local net = {}
-local claimForce = Vector3.new(0, -36, 0)
+local claimForce = Vector3.new(0, -36 * 2, 0)
 
 local gui = game:GetObjects("rbxassetid://118292817263083")[1]
 gui.Parent = game:GetService("CoreGui")
