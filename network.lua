@@ -1,173 +1,218 @@
-_G.NETACTIVE = not _G.NETACTIVE
-
-pcall(function()
-	_G.NETCON1:Disconnect()
-	_G.NETCON2:Disconnect()
-	_G.NETCON3:Disconnect()
-	_G.NETCON1 = nil
-	_G.NETCON2 = nil
-	_G.NETCON3 = nil
-end)
-
-local function mss(tx)
-	local msg = Instance.new("Hint")
-	msg.Text = tx
-	msg.Parent = workspace
-	game:GetService("Debris"):AddItem(msg, 1)
-end
-
-mss("Net Nigga Activated? " .. (_G.NETACTIVE and "Yes!" or "No..."))
-
-if not _G.NETACTIVE then
-	return
-end
-
 local players = game:GetService("Players")
 local plr = players.LocalPlayer
-local ms = plr:GetMouse()
 
-local moder = false
-local offset = 2
-local ct = 0
-local parts = {}
-local alignments = {}
-local bp
+local mode = "y"
+local active = false
+local range = 0
+local count = 0
+local speed = 0
+local net = {}
+local claimForce = Vector3.new(0, -36, 0)
 
-local function check(inst)
-	return inst:IsA("BasePart") and
-		not inst.Anchored and
-		not Players:GetPlayerFromCharacter(inst.Parent) and
-		not Players:GetPlayerFromCharacter(inst.Parent.Parent)
+local gui = game:GetObjects("rbxassetid://118292817263083")[1]
+gui.Parent = game:GetService("CoreGui")
+
+
+---  FUNCTIONS  ---
+
+
+local function check(v)
+	return v:IsA("BasePart") and
+		not v.Anchored and
+		not players:GetPlayerFromCharacter(v.Parent) and
+		not players:GetPlayerFromCharacter(v.Parent.Parent)
 end
 
-local function clearAlignments()
-	for i, v in next, alignments do
-		v:Destroy()
+local function clearNet()
+	for _, v in net do
+		if not v.part then continue end
+		
+		v.partatt:Destroy()
+		v.bppart:Destroy()
+		v.align:Destroy()
+		
+		v.part.CanCollide = v.collision
 	end
 	
-	for i, v in next, parts do
-		i.CanCollide = v
-	end
-	
-	table.clear(alignments)
-	table.clear(parts)
+	table.clear(net)
 end
 
-local function addAlignments()
-	clearAlignments()
-	
-	for i, v in next, workspace:GetDescendants() do
-		if check(v) then
-			parts[v] = v.CanCollide
-			v.CanCollide = false
-			
-			local att = Instance.new("Attachment")
-			att.Parent = v
-			
-			local alignp = Instance.new("AlignPosition")
-			alignp.Attachment0 = att
-			alignp.Attachment1 = bp.Attachment
-			alignp.MaxForce = math.huge
-			alignp.MaxVelocity = math.huge
-			alignp.Responsiveness = math.huge
-			alignp.ReactionForceEnabled = false
-			alignp.ApplyAtCenterOfMass = true
-			alignp.Parent = v
-			
-			table.insert(alignments, alignp)
-		end
+local function addNet()
+	clearNet()
+
+	for _, v in workspace:GetDescendants() do
+		if not check(v) then continue end
+		
+		local bp = Instance.new("Part")
+		bp.Name = "AttachmentPart"
+		bp.Transparency = 1
+		bp.CanCollide = false
+		bp.Anchored = true
+		bp.Size = Vector3.new(0.1, 0.1, 0.1)
+		bp.Parent = v
+
+		local patt = Instance.new("Attachment")
+		patt.Parent = v
+		
+		local bpatt = Instance.new("Attachment")
+		bpatt.Parent = bp
+
+		local alignp = Instance.new("AlignPosition")
+		alignp.Attachment0 = patt
+		alignp.Attachment1 = bpatt
+		alignp.MaxForce = math.huge
+		alignp.MaxVelocity = math.huge
+		alignp.Responsiveness = math.huge
+		alignp.ReactionForceEnabled = false
+		alignp.ApplyAtCenterOfMass = true
+		alignp.Parent = v
+
+		table.insert(net, {
+			part = v,
+			partatt = patt,
+			bppart = bp,
+			align = alignp,
+			collision = v.CanCollide,
+		})
+		
+		v.CanCollide = false
 	end
 end
 
----------------------
+local function op(fn)
+	for _, v in net do
+		if not v.part then continue end
+		
+		fn(v)
+	end
+end
 
-settings().Physics.AllowSleep = false
 
----------------------
+---  CHAR CONNECTIONS  ---
 
-_G.NETCON1 = plr.CharacterAdded:Connect(function()
-	moder = false
-	clearAlignments()
-	mss("Disabled")
+
+local con1
+local con2
+local con3
+
+con1 = plr.CharacterAdded:Connect(function()
+	active = false
+	clearNet()
+	con2:Disconnect()
 	
-	_G.NETCON2:Disconnect()
-	_G.NETCON2 = plr.Character:WaitForChild("Humanoid").Died:Connect(function()
-		moder = false
-		clearAlignments()
-		mss("Disabled")
+	gui.Frame.Title.Text = "   Funny Network Gui Thingy | INACTIVE"
+
+	con2 = plr.Character:WaitForChild("Humanoid").Died:Connect(function()
+		active = false
+		clearNet()
+		
+		gui.Frame.Title.Text = "   Funny Network Gui Thingy | INACTIVE"
 	end)
 end)
 
-_G.NETCON2 = plr.Character.Humanoid.Died:Connect(function()
-	moder = false
-	clearAlignments()
-	mss("Disabled")
+con2 = plr.Character:WaitForChild("Humanoid").Died:Connect(function()
+	active = false
+	clearNet()
+	
+	gui.Frame.Title.Text = "   Funny Network Gui Thingy | INACTIVE"
 end)
 
-_G.NETCON3 = ms.KeyDown:Connect(function(k)
-	if k == "[" then
-		if not bp or bp.Parent == nil then
-			bp = Instance.new("Part")
-			bp.Name = "AttachmentPart"
-			bp.Transparency = 1
-			bp.CanCollide = false
-			bp.Anchored = true
-			bp.Size = Vector3.new(0.1, 0.1, 0.1)
-			bp.Parent = workspace
-			
-			local bodyatt = Instance.new("Attachment")
-			bodyatt.Parent = bp
-		end
-		
-		moder = not moder
-		
-		if moder then
-			mss("Enabled")
-			addAlignments()
-		else
-			mss("Disabled")
-			clearAlignments()
-		end
-	end
+
+---  GUI HANDLING  ---
+
+
+gui.Frame.Range.FocusLost:Connect(function()
+	range = tonumber(gui.Frame.Range.Text)
 end)
+
+gui.Frame.Speed.FocusLost:Connect(function()
+	speed = tonumber(gui.Frame.Speed.Text) / 1000
+end)
+
+gui.Frame.Stop.MouseButton1Click:Connect(function()
+	active = false
+	clearNet()
+
+	gui.Frame.Title.Text = "   Funny Network Gui Thingy | INACTIVE"
+end)
+
+for _, v in gui.Frame.Container:GetChildren() do
+	if v:IsA("TextButton") then
+		v.MouseButton1Click:Connect(function()
+			active = true
+			mode = string.lower(v.Name)
+			
+			addNet()
+			
+			gui.Frame.Title.Text = "   Funny Network Gui Thingy | ACTIVE"
+		end)
+	end
+end
+
+--- LOOPS ---
 
 task.spawn(function()
-	while task.wait() and _G.NETACTIVE do
-		ct += 0.01
-		
+	while task.wait() do
 		sethiddenproperty(plr, "MaximumSimulationRadius", 10000000000)
 		sethiddenproperty(plr, "SimulationRadius", 9000000000)
 		plr.ReplicationFocus = workspace
 		
-		if bp and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-			bp.CFrame = (CFrame.new(plr.Character.HumanoidRootPart.Position) * CFrame.new(
-				0,
-				offset,
-				0
-			))
-		end
-	end
-end)
-
-task.spawn(function()
-	while task.wait() and _G.NETACTIVE do
-		for i, v in next, parts do
-			if i then
-				i.Velocity = Vector3.new(0, -36, 0)
+		for _, v in net do
+			if v.part then
+				v.part.Velocity = claimForce
 			end
 		end
 	end
 end)
 
-repeat task.wait(.1) until not _G.NETACTIVE
-
-pcall(function()
-	_G.NETCON1:Disconnect()
-	_G.NETCON2:Disconnect()
-	_G.NETCON3:Disconnect()
-	_G.NETCON1 = nil
-	_G.NETCON2 = nil
-	_G.NETCON3 = nil
+task.spawn(function()
+	while task.wait() do
+		if not active then continue end
+		if not plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then continue end
+		
+		count += speed
+		
+		if mode == "x" then
+			
+			op(function(v)
+				v.bppart.Position = plr.Character.HumanoidRootPart.Position + Vector3.new(range, 0, 0)
+			end)
+			
+		elseif mode == "y" then
+			
+			op(function(v)
+				v.bppart.Position = plr.Character.HumanoidRootPart.Position + Vector3.new(0, range, 0)
+			end)
+			
+		elseif mode == "z" then
+			
+			op(function(v)
+				v.bppart.Position = plr.Character.HumanoidRootPart.Position + Vector3.new(0, 0, range)
+			end)
+			
+		elseif mode == "crazy" then
+			
+			op(function(v)
+				v.bppart.Position = plr.Character.HumanoidRootPart.Position + Vector3.new(
+					math.random(-range, range),
+					math.random(-10, 10),
+					math.random(-range, range)
+				)
+			end)
+			
+		elseif mode == "orbit" then
+			
+			local s = math.sin(count) * range
+			local c = math.cos(count) * range
+			
+			op(function(v)
+				v.bppart.Position = plr.Character.HumanoidRootPart.Position + Vector3.new(
+					s,
+					0,
+					c
+				)
+			end)
+			
+		end
+	end
 end)
-
-clearAlignments()
