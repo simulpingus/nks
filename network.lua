@@ -27,10 +27,18 @@ local function clearNet()
 	for _, v in net do
 		if not v.part then continue end
 		
-		v.partatt:Destroy()
-		v.bppart:Destroy()
-		v.align:Destroy()
-		v.torque:Destroy()
+		if v.partatt then
+			v.partatt:Destroy()
+		end
+		if v.bppart then
+			v.bppart:Destroy()
+		end
+		if v.align then
+			v.align:Destroy()
+		end
+		if v.torque then
+			v.torque:Destroy()
+		end
 		v.CanCollide = v.collision
 	end
 	
@@ -173,17 +181,26 @@ task.spawn(function()
 		end
 		
 		for _, v in toremove do
-			net[v].partatt:Destroy()
-			net[v].bppart:Destroy()
-			net[v].align:Destroy()
-			net[v].torque:Destroy()
+			local obj = net[v]
+			if obj.partatt then
+				obj.partatt:Destroy()
+			end
+			if obj.bppart then
+				obj.bppart:Destroy()
+			end
+			if obj.align then
+				obj.align:Destroy()
+			end
+			if obj.torque then
+				obj.torque:Destroy()
+			end
 			table.remove(net, v)
 		end
 	end
 end)
 
 task.spawn(function()
-	while task.wait(1 / 30) do
+	while task.wait(1 / 15) do
 		if not active then continue end
 		if not plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then continue end
 		
