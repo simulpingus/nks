@@ -183,7 +183,7 @@ task.spawn(function()
 end)
 
 task.spawn(function()
-	while task.wait(1 / 8) do
+	while task.wait(1 / 30) do
 		if not active then continue end
 		if not plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then continue end
 		
