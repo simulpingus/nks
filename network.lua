@@ -7,7 +7,7 @@ local range = 0
 local count = 0
 local speed = 0
 local net = {}
-local claimForce = Vector3.new(0, -36 * 2, 0)
+local claimForce = Vector3.new(0, 36 * 5, 0)
 
 local gui = game:GetObjects("rbxassetid://118292817263083")[1]
 gui.Parent = game:GetService("CoreGui")
@@ -31,8 +31,6 @@ local function clearNet()
 		v.bppart:Destroy()
 		v.align:Destroy()
 		v.torque:Destroy()
-		
-		v.part.CanCollide = v.collision
 	end
 	
 	table.clear(net)
@@ -77,8 +75,7 @@ local function addNet()
 			partatt = patt,
 			bppart = bp,
 			align = alignp,
-			torque = tq,
-			collision = v.CanCollide
+			torque = tq
 		})
 		
 		v.CanCollide = false
@@ -163,16 +160,28 @@ task.spawn(function()
 		sethiddenproperty(plr, "SimulationRadius", 9000000000)
 		plr.ReplicationFocus = workspace
 		
-		for _, v in net do
-			if v.part then
+		local toremove = {}
+		
+		for i, v in net do
+			if v.part and v.part.Parent ~= nil then
 				v.part.Velocity = claimForce
+			else
+				table.insert(toremove, i)
 			end
+		end
+		
+		for _, v in toremove do
+			net[v].partatt:Destroy()
+			net[v].bppart:Destroy()
+			net[v].align:Destroy()
+			net[v].torque:Destroy()
+			table.remove(net, v)
 		end
 	end
 end)
 
 task.spawn(function()
-	while task.wait() do
+	while task.wait(1 / 8) do
 		if not active then continue end
 		if not plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then continue end
 		
@@ -180,20 +189,26 @@ task.spawn(function()
 		
 		if mode == "x" then
 			
+			local pos = plr.Character.HumanoidRootPart.Position + Vector3.new(range, 0, 0)
+			
 			op(function(v)
-				v.bppart.Position = plr.Character.HumanoidRootPart.Position + Vector3.new(range, 0, 0)
+				v.bppart.Position = pos
 			end)
 			
 		elseif mode == "y" then
 			
+			local pos = plr.Character.HumanoidRootPart.Position + Vector3.new(0, range, 0)
+			
 			op(function(v)
-				v.bppart.Position = plr.Character.HumanoidRootPart.Position + Vector3.new(0, range, 0)
+				v.bppart.Position = pos
 			end)
 			
 		elseif mode == "z" then
 			
+			local pos = plr.Character.HumanoidRootPart.Position + Vector3.new(0, 0, range)
+			
 			op(function(v)
-				v.bppart.Position = plr.Character.HumanoidRootPart.Position + Vector3.new(0, 0, range)
+				v.bppart.Position = pos
 			end)
 			
 		elseif mode == "crazy" then
@@ -208,15 +223,14 @@ task.spawn(function()
 			
 		elseif mode == "orbit" then
 			
-			local s = math.sin(count) * range
-			local c = math.cos(count) * range
+			local pos = plr.Character.HumanoidRootPart.Position + Vector3.new(
+				math.sin(count) * range,
+				0,
+				math.cos(count) * range
+			)
 			
 			op(function(v)
-				v.bppart.Position = plr.Character.HumanoidRootPart.Position + Vector3.new(
-					s,
-					0,
-					c
-				)
+				v.bppart.Position = pos
 			end)
 			
 		end
