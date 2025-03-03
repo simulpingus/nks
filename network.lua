@@ -31,6 +31,7 @@ local function clearNet()
 		v.bppart:Destroy()
 		v.align:Destroy()
 		v.torque:Destroy()
+		v.CanCollide = v.collision
 	end
 	
 	table.clear(net)
@@ -75,7 +76,8 @@ local function addNet()
 			partatt = patt,
 			bppart = bp,
 			align = alignp,
-			torque = tq
+			torque = tq,
+			collision = v.CanCollide
 		})
 		
 		v.CanCollide = false
