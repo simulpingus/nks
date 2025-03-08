@@ -39,6 +39,7 @@ local function clearNet()
 		if v.torque then
 			v.torque:Destroy()
 		end
+		
 		v.CanCollide = v.collision
 	end
 	
@@ -135,11 +136,11 @@ end)
 
 
 gui.Frame.Range.FocusLost:Connect(function()
-	range = tonumber(gui.Frame.Range.Text)
+	range = tonumber(gui.Frame.Range.Text) or 0
 end)
 
 gui.Frame.Speed.FocusLost:Connect(function()
-	speed = tonumber(gui.Frame.Speed.Text) / 1000
+	speed = (tonumber(gui.Frame.Speed.Text) or 100) / 1000
 end)
 
 gui.Frame.Stop.MouseButton1Click:Connect(function()
@@ -175,32 +176,13 @@ task.spawn(function()
 		for i, v in net do
 			if v.part and v.part.Parent ~= nil then
 				v.part.Velocity = claimForce
-			else
-				table.insert(toremove, i)
 			end
-		end
-		
-		for _, v in toremove do
-			local obj = net[v]
-			if obj.partatt then
-				obj.partatt:Destroy()
-			end
-			if obj.bppart then
-				obj.bppart:Destroy()
-			end
-			if obj.align then
-				obj.align:Destroy()
-			end
-			if obj.torque then
-				obj.torque:Destroy()
-			end
-			table.remove(net, v)
 		end
 	end
 end)
 
 task.spawn(function()
-	while task.wait(1 / 15) do
+	while task.wait(1 / 30) do
 		if not active then continue end
 		if not plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then continue end
 		
